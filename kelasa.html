@@ -1,0 +1,200 @@
+<!DOCTYPE html lang="en-us">
+<html>
+<!--
+    Kelasa: A simple task tracker based on HTML and Javascript.
+    Copyright (C) 2021  Atrij Talgery(github/progmatix21)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width" />
+<title>Kelasa</title>
+
+<style>
+.hidden{
+  display: none;
+}
+</style>
+
+<!--<script type="text/javascript" src="https://github.com/typicaljoe/taffydb/raw/master/taffy.js"></script>-->
+<script type="text/javascript" src="taffy.js" ></script> 
+
+<script>
+
+var taffyloc="https://github.com/typicaljoe/taffydb/raw/master/taffy.js";
+try {
+    var mytaskdb = TAFFY();
+    mytaskdb.store("mytaskdb"); //make it persistent on disk.
+} catch(e) {  //First time -- installation
+    var msg = `<div align="center"><b>First-use Instructions<br/></b>Save <a href=${taffyloc} >this</a> link as <b>taffy.js</b> in the same folder as this page and reload current page.</div>`
+    document.write(`${msg}`);
+    window.stop(); //Stop page load
+}
+
+//Initialize the startup screen.
+window.onload = function() { // this will be run when the whole page is loaded
+    tasklistarray=mytaskdb().order("cDueOn").select("aID","bTask","cDueOn","dTags");
+    GenerateTable();
+}
+
+function switcher() {  //toggle between main screen and edit form
+    document.getElementById("mainform").classList.toggle("hidden");
+    document.getElementById("subform").classList.toggle("hidden");
+}
+
+var mytaskid;  //global to track current task ID
+function addTask() {
+    mytaskid = Math.random().toString(36).substring(2,7);
+    console.log(mytaskid);
+    document.getElementById("taskid").innerHTML=mytaskid;
+    switcher();	 
+}
+
+var tasklistarray;  //global to generate current view of task table
+function updatedb() {
+    let td=document.getElementById("td").value;
+    let due=document.getElementById("due").value;
+    let tag=document.getElementById("tag").value;
+    if(mytaskdb({aID:mytaskid}).count()==0) {
+     	mytaskdb.insert({aID:mytaskid,bTask:td,cDueOn:due,dTags:tag});
+	 }
+    else {
+    	 console.log("inside else "+ mytaskdb({aID:mytaskid}).count())
+		 mytaskdb({aID:mytaskid}).update({bTask:td});    
+		 mytaskdb({aID:mytaskid}).update({cDueOn:due});    
+		 mytaskdb({aID:mytaskid}).update({dTags:tag});    
+    	 console.log("From updatedb "+mytaskid);
+    }
+    tasklistarray=mytaskdb().order("cDueOn").select("aID","bTask","cDueOn","dTags");
+    console.log(tasklistarray); 
+	 
+    GenerateTable();
+    switcher();
+}
+
+function edittask(taskid) {
+    mytaskid = taskid;  //Update the global task ID.
+    console.log("Attempt to edit task ID "+taskid);
+    document.getElementById("taskid").innerHTML=taskid;
+    document.getElementById("td").value = mytaskdb({aID:taskid}).first().bTask;
+    document.getElementById("due").value = mytaskdb({aID:taskid}).first().cDueOn;
+    document.getElementById("tag").value = mytaskdb({aID:taskid}).first().dTags;
+    switcher();
+}
+
+function deletetask() {
+    console.log("Attempt to delete task "+mytaskid);
+    mytaskdb({aID:mytaskid}).remove();
+    tasklistarray=mytaskdb().order("cDueOn").select("aID","bTask","cDueOn","dTags");
+      
+    GenerateTable();
+    switcher();
+}
+
+//Function to generate table on the fly from array.
+function GenerateTable() {
+		  
+    var collist = ["ID","Task","DueOn","Tags"];
+    var tasklist = tasklistarray;
+    //Create a HTML Table element.
+    var table = document.createElement("TABLE");
+    table.border = "1";
+ 		  
+    //Get the count of columns.
+    var columnCount = collist.length;
+     
+    //Add the header row.
+    var row = table.insertRow(-1);
+    for (var i = 0; i < columnCount; i++) {
+        var headerCell = document.createElement("TH");
+        headerCell.innerHTML = collist[i];
+        row.appendChild(headerCell);
+    }
+ 
+    //Add the data rows
+     for (var i = 0; i < tasklist.length; i++) {
+        row = table.insertRow(-1);
+        for (var j = 0; j < columnCount; j++) {
+            var cell = row.insertCell(-1);
+            if(j==0) {
+                hypertemp=tasklist[i][j];   //hypertemp is also the taskid.					  
+                cell.innerHTML = hypertemp.link(`javascript:edittask(\"${hypertemp}\")`);
+            }
+            else{
+                cell.innerHTML = tasklist[i][j];
+            }                   
+        }
+    } 
+    var dvTable = document.getElementById("dvTable");
+    dvTable.innerHTML = "";
+    dvTable.appendChild(table);
+}
+
+function searchtask() {
+		  
+    mykw_raw = document.getElementById("searchtag").value;
+    stoplist = /[\s,:;'"]+/g;
+    
+    mykw = mykw_raw.replace(stoplist, '|');  //Replace stoplist with pipe.
+    
+    // convert mykw to a regular expression
+    mykwregex = RegExp(`${mykw}`);
+    console.log(mytaskdb([{bTask:{regex:mykwregex}},{dTags:{regex:mykwregex}}]).order("cDueOn").select("aID","bTask","cDueOn","dTags"));
+    tasklistarray=mytaskdb([{bTask:{regex:mykwregex}},{dTags:{regex:mykwregex}}]).order("cDueOn").select("aID","bTask","cDueOn","dTags");
+    GenerateTable();
+}
+
+</script>
+</head>
+
+<body>
+    <h1 align="center">Kelasa</h1>
+    <h3 align="center">Simple Task Tracker</h3>
+
+    <div id="mainform">  <!-- The main form -->
+    
+        <div id="dvTable" align="center"></div>
+        <div align="center" id="ctrl">
+            <button onclick="addTask()" style="margin-top:20px">Add Task</button>
+        </div>
+        <!-- Search button -->
+        <div style="margin-top: 50;" id="filter" align="center">
+            <input size="10" value="keyword or tags" id="searchtag"/> <button onclick="searchtask()">Search</button>
+        </div>
+    
+    </div> <!--End of main form-->
+    
+    <div id="subform" class="hidden">  <!-- The edit task form -->
+        <div align="center" id="ctrl">
+        
+            <h2>Edit Task</h2>
+            
+            Task ID: <span id="taskid"></span><br/><br/>
+            Task Details<br/><input type="text" id="td" value="Enter task details"></input><br/><br/>
+            Due On<br/><input type="date" id="due"></input><br/><br/>
+            Tags<br/><input title="Comma separated tags" type="text" id="tag" value="Comma separated tags."></input><br/>
+            
+            <!-- The Button Panel -->
+            <div style="margin-top: 10; ">
+                <button onclick="switcher()">Cancel</button>
+                <button onclick="updatedb()">Update</button>
+                <button title="Delete this task. Cannot be undone!" onclick="deletetask()">Delete</button>
+            </div>
+        </div>  <!-- End div id ctrl -->
+    </div>  <!--End of Edit task form -->
+    
+</body>
+</html>
