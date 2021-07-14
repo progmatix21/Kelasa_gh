@@ -56,38 +56,33 @@ function switcher() {  //toggle between main screen and edit form
 }
 
 var mytaskid;  //global to track current task ID
-function addTask() {
+function addTask() {  //generate a task ID and pop the edittask form
     mytaskid = Math.random().toString(36).substring(2,7);
-    console.log(mytaskid);
     document.getElementById("taskid").innerHTML=mytaskid;
     switcher();	 
 }
 
 var tasklistarray;  //global to generate current view of task table
-function updatedb() {
+function updatedb() {  //add entered task details to database
     let td=document.getElementById("td").value;
     let due=document.getElementById("due").value;
     let tag=document.getElementById("tag").value;
-    if(mytaskdb({aID:mytaskid}).count()==0) {
+    if(mytaskdb({aID:mytaskid}).count()==0) {  //new task ID, hence insert record
      	mytaskdb.insert({aID:mytaskid,bTask:td,cDueOn:due,dTags:tag});
 	 }
-    else {
-    	 console.log("inside else "+ mytaskdb({aID:mytaskid}).count())
-		 mytaskdb({aID:mytaskid}).update({bTask:td});    
+    else {  //task ID already exists, hence update record
+		 mytaskdb({aID:mytaskid}).update({bTask:td});
 		 mytaskdb({aID:mytaskid}).update({cDueOn:due});    
 		 mytaskdb({aID:mytaskid}).update({dTags:tag});    
-    	 console.log("From updatedb "+mytaskid);
     }
     tasklistarray=mytaskdb().order("cDueOn").select("aID","bTask","cDueOn","dTags");
-    console.log(tasklistarray); 
 	 
     GenerateTable();
     switcher();
 }
 
-function edittask(taskid) {
-    mytaskid = taskid;  //Update the global task ID.
-    console.log("Attempt to edit task ID "+taskid);
+function edittask(taskid) {  //Generate prefilled task form and switch to it
+    mytaskid = taskid;  //Update the global task ID
     document.getElementById("taskid").innerHTML=taskid;
     document.getElementById("td").value = mytaskdb({aID:taskid}).first().bTask;
     document.getElementById("due").value = mytaskdb({aID:taskid}).first().cDueOn;
@@ -95,8 +90,7 @@ function edittask(taskid) {
     switcher();
 }
 
-function deletetask() {
-    console.log("Attempt to delete task "+mytaskid);
+function deletetask() {  //Delete the specified taskID and switch view to task table
     mytaskdb({aID:mytaskid}).remove();
     tasklistarray=mytaskdb().order("cDueOn").select("aID","bTask","cDueOn","dTags");
       
@@ -104,6 +98,7 @@ function deletetask() {
     switcher();
 }
 
+var today = new Date();  //needed to flag late tasks
 //Function to generate table on the fly from array.
 function GenerateTable() {
 		  
@@ -127,14 +122,21 @@ function GenerateTable() {
     //Add the data rows
      for (var i = 0; i < tasklist.length; i++) {
         row = table.insertRow(-1);
+        
+        if((today - new Date(tasklist[i][2]))>=0) {  //compare today with date field
+            taskcolor = 'FF0000';
+        } else {
+            taskcolor = '000000';
+        }
+
         for (var j = 0; j < columnCount; j++) {
             var cell = row.insertCell(-1);
-            if(j==0) {
+            if(j==0) {  //make task ID a hyperlink
                 hypertemp=tasklist[i][j];   //hypertemp is also the taskid.					  
                 cell.innerHTML = hypertemp.link(`javascript:edittask(\"${hypertemp}\")`);
             }
             else{
-                cell.innerHTML = tasklist[i][j];
+                cell.innerHTML = tasklist[i][j].fontcolor(`\"${taskcolor}\"`);
             }                   
         }
     } 
@@ -143,16 +145,14 @@ function GenerateTable() {
     dvTable.appendChild(table);
 }
 
-function searchtask() {
+function searchtask() {  //search for keywords task and tags columns
 		  
     mykw_raw = document.getElementById("searchtag").value;
     stoplist = /[\s,:;'"]+/g;
-    
-    mykw = mykw_raw.replace(stoplist, '|');  //Replace stoplist with pipe.
-    
+     //Replace stoplist with pipe for OR'ing the keywords
+    mykw = mykw_raw.replace(stoplist, '|'); 
     // convert mykw to a regular expression
-    mykwregex = RegExp(`${mykw}`);
-    console.log(mytaskdb([{bTask:{regex:mykwregex}},{dTags:{regex:mykwregex}}]).order("cDueOn").select("aID","bTask","cDueOn","dTags"));
+    mykwregex = RegExp(`${mykw}`,'i');
     tasklistarray=mytaskdb([{bTask:{regex:mykwregex}},{dTags:{regex:mykwregex}}]).order("cDueOn").select("aID","bTask","cDueOn","dTags");
     GenerateTable();
 }

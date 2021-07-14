@@ -1,6 +1,6 @@
 ---
 title: \bf{Task Tracker -- Devdoc}
-author: Atrij
+author: Atrij Talgery
 date: \small\sffamily{Started on 08 June, 2021}
 papersize: a4
 documentclass: book
@@ -112,10 +112,68 @@ presses filter.                             returns the output.
 : User-System Interaction-3
 
 
-![Main screen mockup](secondpage.png)
+![Main screen mockup](Pics/secondpage.png)
 
-![Task edit mockup](firstpage.png)
+![Task edit mockup](Pics/firstpage.png)
+
+\newpage
+
+## Architectural Design
+
+We use the Model-View-Controller (MVC) architecture for this project. Refer to 
+Figure \ref{collab} for the system-level interaction diagram.
+
+![Collaboration Diagram\label{collab}](collab_diag.png){width=500px}
+
+The Figure \ref{seqdia} shows a typical sequence diagram for a user button press.
+
+![Sequence Diagram\label{seqdia}](sequencedia.png){width=500px}
 
 
+## Detailed Design
 
+Here we describe the code and logic used to achieve specific functionality
+in the design.
 
+### Model/Database schema
+
+Our schema has four text columns: `aID, bTask , cDueOn , dTags` of which
+`aID` is the key field.
+
+### Generating random task ID
+
+We use the following approach to generate random task IDs.
+
+```{.javascript .numberLines}
+function addTask() {  //generate a task ID and pop the edittask form
+    mytaskid = Math.random().toString(36).substring(2,7);
+    document.getElementById("taskid").innerHTML=mytaskid;
+    switcher();	 
+}
+```
+### Search function
+
+We read the search keyword and replace all characters in the stoplist with a `|`.
+Essentially we are OR'ing before forming the regular expression. Next we search the
+Task and Tag fields for this expression. Next the task table updates with this filtered
+view. 
+
+```{.javascript .numberLines}
+    mykw_raw = document.getElementById("searchtag").value;
+    stoplist = /[\s,:;'"]+/g;
+     //Replace stoplist with pipe for OR'ing the keywords
+    mykw = mykw_raw.replace(stoplist, '|'); 
+    // convert mykw to a regular expression
+    mykwregex = RegExp(`${mykw}`,'i');
+    tasklistarray=mytaskdb([{bTask:{regex:mykwregex}},
+    {dTags:{regex:mykwregex}}]).order("cDueOn").select("aID",
+    "bTask","cDueOn","dTags");
+    GenerateTable();
+```
+
+# Concluding note
+
+*Kelasa* is a simple task tracking web application. However, since it uses the browser
+database it is tied to the particular browser and its own name as the HTML file. You
+continue to have persistent access to your task list as long as you stick to the same
+browser and keep the HTML file name unchanged.
