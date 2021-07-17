@@ -6,6 +6,7 @@ Kelasa uses TaffyDB, the Javascript database available at:
 https://github.com/typicaljoe/taffydb/raw/master/taffy.js
 
 ### Origin of the name:
+
 'Kelasa' is a Kannada word that translates as 'work'. 
 
 ### What can it do?
@@ -18,6 +19,8 @@ https://github.com/typicaljoe/taffydb/raw/master/taffy.js
 ### Installation
 
 There is no installation: you just need to copy kelasa.html and taffy.js into the same folder and open kelasa.html in your browser to get started.  Alternatively, you can just open kelasa.html and you will be prompted to download taffy.js.
+
+You can also convert Kelasa into a webapp on Linux using Webapp Manager.
 
 ### Typical usage
 

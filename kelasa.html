@@ -59,6 +59,10 @@ var mytaskid;  //global to track current task ID
 function addTask() {  //generate a task ID and pop the edittask form
     mytaskid = Math.random().toString(36).substring(2,7);
     document.getElementById("taskid").innerHTML=mytaskid;
+    document.getElementById("td").value = "";
+    document.getElementById("due").value = "";
+    document.getElementById("tag").value = "";
+
     switcher();	 
 }
 
@@ -161,7 +165,7 @@ function searchtask() {  //search for keywords task and tags columns
 </head>
 
 <body>
-    <h1 align="center">Kelasa</h1>
+    <h1 align="center">Kelasa<a href="https://github.com/progmatix21/kelasa_gh" target="blank" style="font-size:14px ;">&#129109;</a></h1>
     <h3 align="center">Simple Task Tracker</h3>
 
     <div id="mainform">  <!-- The main form -->
@@ -172,7 +176,8 @@ function searchtask() {  //search for keywords task and tags columns
         </div>
         <!-- Search button -->
         <div style="margin-top: 50;" id="filter" align="center">
-            <input size="10" value="keyword or tags" id="searchtag"/> <button onclick="searchtask()">Search</button>
+            <input size="10" id="searchtag" oninput="searchtask()" placeholder="keywords or tags"/> 
+            
         </div>
     
     </div> <!--End of main form-->
@@ -183,9 +188,9 @@ function searchtask() {  //search for keywords task and tags columns
             <h2>Edit Task</h2>
             
             Task ID: <span id="taskid"></span><br/><br/>
-            Task Details<br/><input type="text" id="td" value="Enter task details"></input><br/><br/>
+            Task Details<br/><input type="text" id="td" placeholder="Enter task details"></input><br/><br/>
             Due On<br/><input type="date" id="due"></input><br/><br/>
-            Tags<br/><input title="Comma separated tags" type="text" id="tag" value="Comma separated tags."></input><br/>
+            Tags<br/><input title="Comma separated tags" type="text" id="tag" placeholder="Comma separated tags."></input><br/>
             
             <!-- The Button Panel -->
             <div style="margin-top: 10; ">
